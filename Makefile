@@ -32,7 +32,7 @@ LD := ld
 # C++ flags
 CXXFLAGS := #-std=c++11
 # C/C++ flags
-CPPFLAGS := -g -Wall -Wextra `wx-config --cxxflags` #-pedantic 
+CPPFLAGS := -g -O3 -Wall -Wextra `wx-config --cxxflags` #-pedantic 
 # linker flags
 #LDFLAGS := -L/usr/lib/x86_64-linux-gnu -lpthread -lwx_gtk2u_xrc-3.0 -lwx_gtk2u_html-3.0 -lwx_gtk2u_qa-3.0 -lwx_gtk2u_adv-3.0 -lwx_gtk2u_core-3.0 -lwx_baseu_xml-3.0 -lwx_baseu_net-3.0 -lwx_baseu-3.0 -lc
 LDFLAGS := `wx-config --libs`
@@ -56,6 +56,9 @@ all: $(BIN)
 clean:
 	$(RM) -r $(OBJDIR) $(DEPDIR)
 	$(RM) $(BIN)
+
+perf: rt_perf.cpp Rt.cpp Camera.cpp Sphere.cpp Material.cpp
+	$(CXX) $(CFLAGS) $(CPPFLAGS) -pg -o $@  $^ 
 
 $(BIN): $(OBJS)
 	$(CXX) -o $@  $^ $(LDFLAGS) $(LDLIBS)

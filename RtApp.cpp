@@ -23,7 +23,7 @@ public:
         
         wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
 
-        Nx = 600;
+        Nx = 800;
         Ny = 600;
 
         rt = new Rt(Nx, Ny);

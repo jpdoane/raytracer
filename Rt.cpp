@@ -30,7 +30,7 @@ void Rt::render()
 {
     unsigned int Naa = 100;
 
-    Camera cam(Vec3(0,0,8), Vec3(0,0,0), Vec3(0,1,0), 1, 8, 6);
+    Camera cam(Vec3(0,0,8), Vec3(0,0,0), Vec3(0,1,0), 1, w/100, h/100);
 
     HittableList world;
     world.emplace_back(new Sphere(Vec3(0,0,-3), 8, Diffuse(RED)));
