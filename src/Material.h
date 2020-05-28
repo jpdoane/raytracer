@@ -2,6 +2,7 @@
 #include "Color.h"
 #include "Hit.h"
 #include "Rand.h"
+#include <jsoncpp/json/json.h>
 
 struct Hit;
 
@@ -15,14 +16,13 @@ class Material
     virtual ~Material() {}
 
     virtual bool scatter( const Hit& /*hit*/, Ray& /*scat*/, Color& albedo ) const = 0;
-    virtual Material* clone_new() const = 0;
 };
 
 class Flat: public Material
 {
+    public:
     Flat(Color albedo): Material(albedo) {}
     virtual bool scatter( const Hit& /*hit*/, Ray& /*scat*/, Color& albedo ) const;
-    virtual Flat* clone_new() const { return new Flat(*this); };
 };
 
 
@@ -34,8 +34,18 @@ class Diffuse : public Material
     Diffuse(Color albedo): Material(albedo) {}
 
     virtual bool scatter( const Hit& hit, Ray& scat, Color& albedo ) const;
-    virtual Diffuse* clone_new() const { return new Diffuse(*this); };
 };
+
+class Reflective : public Material
+{
+    mutable Rand rnd;
+
+    public:
+    Reflective(Color albedo): Material(albedo) {}
+
+    virtual bool scatter( const Hit& hit, Ray& scat, Color& albedo ) const;
+};
+
 
 class ColorizeNormal : public Material
 {
@@ -43,5 +53,4 @@ class ColorizeNormal : public Material
     ColorizeNormal(): Material(Color()) {}
 
     virtual bool scatter( const Hit& hit, Ray& scat, Color& albedo ) const;
-    virtual ColorizeNormal* clone_new() const { return new ColorizeNormal(*this); };
 };

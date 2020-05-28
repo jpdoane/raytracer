@@ -1,24 +1,19 @@
 # output binary
 BIN := rt
 
-# source files
-SRCS := \
-    RtApp.cpp \
-	Rt.cpp \
-	Camera.cpp \
-	Display.cpp \
-	Sphere.cpp \
-	Material.cpp
-
+SRCDIR := src
 # intermediate directory for generated object files
 OBJDIR := .o
 # intermediate directory for generated dependency files
 DEPDIR := .d
 
+# source files
+SRCS := $(wildcard $(SRCDIR)/*.cpp)
 # object files, auto generated from source files
-OBJS := $(patsubst %,$(OBJDIR)/%.o,$(basename $(SRCS)))
+
+OBJS := $(patsubst %.cpp,$(OBJDIR)/%.o,$(notdir $(SRCS)))
 # dependency files, auto generated from source files
-DEPS := $(patsubst %,$(DEPDIR)/%.d,$(basename $(SRCS)))
+DEPS := $(patsubst %.cpp,$(DEPDIR)/%.d,$(notdir $(SRCS)))
 
 # compilers (at least gcc and clang) don't create the subdirectories automatically
 $(shell mkdir -p $(dir $(OBJS)) >/dev/null)
@@ -32,10 +27,11 @@ LD := ld
 # C++ flags
 CXXFLAGS := #-std=c++11
 # C/C++ flags
-CPPFLAGS := -g -O3 -Wall -Wextra `wx-config --cxxflags` #-pedantic 
+OPTFLAGS :=  -O3
+CPPFLAGS := -g $(OPTFLAGS) -Wall -Wextra `wx-config --cxxflags` -I. #-pedantic 
 # linker flags
 #LDFLAGS := -L/usr/lib/x86_64-linux-gnu -lpthread -lwx_gtk2u_xrc-3.0 -lwx_gtk2u_html-3.0 -lwx_gtk2u_qa-3.0 -lwx_gtk2u_adv-3.0 -lwx_gtk2u_core-3.0 -lwx_baseu_xml-3.0 -lwx_baseu_net-3.0 -lwx_baseu-3.0 -lc
-LDFLAGS := `wx-config --libs`
+LDFLAGS := `wx-config --libs` -ljsoncpp
 # flags required for dependency generation; passed to compilers
 DEPFLAGS = -MT $@ -MD -MP -MF $(DEPDIR)/$*.Td
 
@@ -63,26 +59,8 @@ perf: rt_perf.cpp Rt.cpp Camera.cpp Sphere.cpp Material.cpp
 $(BIN): $(OBJS)
 	$(CXX) -o $@  $^ $(LDFLAGS) $(LDLIBS)
 
-$(OBJDIR)/%.o: %.c
-$(OBJDIR)/%.o: %.c $(DEPDIR)/%.d
-	$(PRECOMPILE)
-	$(COMPILE.c) $<
-	$(POSTCOMPILE)
-
-$(OBJDIR)/%.o: %.cpp
-$(OBJDIR)/%.o: %.cpp $(DEPDIR)/%.d
-	$(PRECOMPILE)
-	$(COMPILE.cc) $<
-	$(POSTCOMPILE)
-
-$(OBJDIR)/%.o: %.cc
-$(OBJDIR)/%.o: %.cc $(DEPDIR)/%.d
-	$(PRECOMPILE)
-	$(COMPILE.cc) $<
-	$(POSTCOMPILE)
-
-$(OBJDIR)/%.o: %.cxx
-$(OBJDIR)/%.o: %.cxx $(DEPDIR)/%.d
+$(OBJDIR)/%.o: $(SRCDIR)/%.cpp
+$(OBJDIR)/%.o: $(SRCDIR)/%.cpp $(DEPDIR)/%.d
 	$(PRECOMPILE)
 	$(COMPILE.cc) $<
 	$(POSTCOMPILE)

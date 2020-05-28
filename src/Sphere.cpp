@@ -3,14 +3,28 @@
 #include <iostream>
 #include <math.h>
 
-Sphere::Sphere(Vec3 center, float radius, const Material& material)
-: center(center), radius(radius), material(material.clone_new())
+Sphere::Sphere(const Json::Value& config_sphere)
+: Object(config_sphere), valid(false)
 {
+    if(!Object::isValid() || config_sphere.empty())
+        return;
+
+    try
+    {
+        center = Vec3(config_sphere["position"]);
+        radius = config_sphere["radius"].asFloat();
+    }
+    catch(const std::exception& e)
+    {
+       std::cerr << "Error parsing Sphere paramters" << std::endl;
+        return;
+    }
+
+    valid = true;    
 }
 
 Sphere::~Sphere()
 {
-    delete material; //cloned copy
 }
 
 

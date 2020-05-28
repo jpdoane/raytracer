@@ -1,6 +1,7 @@
 #pragma once
 
 #include <math.h>
+#include <jsoncpp/json/json.h>
 
 class Vec3
 {
@@ -18,6 +19,20 @@ public:
 
     Vec3() { }
     Vec3(float x, float y, float z) { e[0] = x; e[1] = y; e[2] = z; }
+    Vec3(const Vec3& v) = default; // { e[0] = v.e[0]; e[1] = v.e[1]; e[2] = v.e[2]; }
+    const Vec3& operator= (const Vec3 &v)  { e[0] = v.e[0]; e[1] = v.e[1]; e[2] = v.e[2]; return *this; }
+
+    Vec3(const Json::Value& v) { e[0] = v[0].asFloat(); e[1] = v[1].asFloat(); e[2] = v[2].asFloat(); }
+    Vec3(const Json::Value& v, const Vec3& default_v)
+    {
+        if(v.empty())
+        {
+            *this = default_v;
+            return;
+        }
+        
+        e[0] = v[0].asFloat(); e[1] = v[1].asFloat(); e[2] = v[2].asFloat();
+    }    
 
     inline const Vec3& operator+() const { return *this; }
     inline Vec3 operator-() const { return Vec3(-e[0],-e[1],-e[2]); }

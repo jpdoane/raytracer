@@ -2,6 +2,3 @@
 *.o
 *.d
 rt
-gmon.out
-perf
-rtperf

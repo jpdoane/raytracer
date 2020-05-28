@@ -13,6 +13,15 @@ bool Diffuse::scatter( const Hit& hit, Ray& scat, Color& albedo ) const
     return true;
 }
 
+bool Reflective::scatter( const Hit& hit, Ray& scat, Color& albedo ) const 
+{
+    scat.origin = hit.point;
+    scat.direction = hit.ray.direction - 2*dot(hit.normal,hit.ray.direction)*hit.normal;
+    albedo=alb;
+    return true;
+}
+
+
 bool ColorizeNormal::scatter( const Hit& hit, Ray& /*scat*/, Color& albedo ) const
 {
     albedo = normalizedVecToColor(hit.normal);

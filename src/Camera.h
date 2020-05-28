@@ -1,15 +1,18 @@
 #pragma once
 #include "Vec3.h"
 #include "Ray.h"
+#include <jsoncpp/json/json.h>
 
 class Camera
 {
+bool valid;
 Vec3 camera_origin, viewport_origin;
 Vec3 viewU, viewV;
 
 public:
 
-    Camera(Vec3 location, Vec3 lookAt, Vec3 up, float view_distance, float view_width, float view_height);
-
+    Camera(const Json::Value& config);
     Ray makeRay(float u, float v);
+
+    inline bool isValid() const {return valid;}
 };
