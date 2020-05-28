@@ -9,6 +9,8 @@ $ make
 $ ./rt rt.json
 ```
 
+![example image](example.png)
+
 ### Dependencies:
 - [JsonCpp](https://github.com/open-source-parsers/jsoncpp)
 - [wxWidgets](https://www.wxwidgets.org/)
