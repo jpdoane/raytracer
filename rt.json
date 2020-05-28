@@ -1,6 +1,6 @@
 {
     "render": {
-        "raysperpixel": 100,
+        "raysperpixel": 200,
         "max_depth": 5
     },
     "image": {
@@ -18,25 +18,32 @@
     "scene":
     [
         {
+            //diffuse red ball
             "type": "sphere",
             "position": [8.5, 8, 0],
             "radius": 8,
-            "color": [0.7,0,0],
+            "color": [0.8,0.2,0.2],
             "material": "diffuse"            
         },
         {
+            //reflective blue ball
             "type": "sphere",
             "position": [-8.5, 8, 0],
             "radius": 8,
-            "color": [0,0,0.7],
-            "material": "diffuse"            
+            "color": [0.4,0.4,0.9],
+            "material": "reflective" 
         },
         {
+            //simulate ground with large sphere
             "type": "sphere",
             "position": [0, -1001, 0],
             "radius": 1000,
-            "color": [0.2, 0.2, 0.2],
+            "color": [0.4, 0.4, 0.4],
             "material": "diffuse"            
+        },
+        {
+            "type": "background",
+            "color": [1,1,1]
         }
     ]
 }

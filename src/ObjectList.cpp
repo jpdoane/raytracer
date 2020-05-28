@@ -4,7 +4,7 @@
 #include <iostream>
 
 ObjectList::ObjectList(const Json::Value& config_scene)
-: valid(false)
+: valid(false), backgroundColor(1,1,1)
 {
 
     // example config:
@@ -32,7 +32,11 @@ ObjectList::ObjectList(const Json::Value& config_scene)
         for(unsigned int no=0;no<config_scene.size();no++)
         {
             const Json::Value& obj = config_scene[no];
-            if(obj["type"].compare("sphere")==0)
+            if(obj["type"].compare("background")==0)
+            {
+                backgroundColor = Color(obj["color"]);
+            }
+            else if(obj["type"].compare("sphere")==0)
             {            
                 emplace_back(new Sphere(obj));
             }

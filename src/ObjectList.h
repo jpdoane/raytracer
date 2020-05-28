@@ -11,6 +11,7 @@ class ObjectList: public std::list<std::unique_ptr<Object> >
 
     public:
     ObjectList(const Json::Value& config_scene);
+    Color backgroundColor;
     
     bool hit(const Ray& ray, Hit& hit) const;
 

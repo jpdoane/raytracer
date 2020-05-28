@@ -90,8 +90,6 @@ void Rt::render()
 
 Color Rt::getColor(const Ray& r, const ObjectList& world, unsigned int depth)
 {
-    Color backgroundColor = WHITE;
-
     Hit hit;
     Color c;
     if(world.hit(r,hit))
@@ -107,5 +105,5 @@ Color Rt::getColor(const Ray& r, const ObjectList& world, unsigned int depth)
             return albedo;            
     }
 
-    return backgroundColor;
+    return world.backgroundColor;
 }

@@ -25,8 +25,9 @@ class RtApp: public wxApp
 {
     
     wxFrame *frame;
-    Display * drawPane;
+    Display *drawPane;
 
+    std::string config_filename;
     Rt* rt;
 
     unsigned int Nx;
@@ -36,33 +37,15 @@ class RtApp: public wxApp
 public:
     bool OnInit()
     {
+        rt = NULL;
+
         // get config file from cmd line
         wxCmdLineParser parser(cmdLineDesc,argc,argv);
         if(parser.Parse())
             return false;
-        std::string config_filename = parser.GetParam().ToStdString();
+        config_filename = parser.GetParam().ToStdString();
 
-        Json::Value rtConfig;
-        try
-        {
-            // read config file into json object
-            std::ifstream configFile(config_filename);
-            if(!configFile.is_open())
-                throw std::runtime_error("Error opening config file " + config_filename);
-
-            configFile >> rtConfig;
-            configFile.close();
-
-            //parse config to get inmage size
-            Nx = rtConfig["image"]["width"].asUInt();
-            Ny = rtConfig["image"]["height"].asUInt();
-        }
-        catch(const std::exception& e)
-        {
-            std::cerr << "Error Parsing " << config_filename << std::endl;            
-            std::cerr << e.what() << '\n';
-            return false;
-        }
+        if(!configImage()) return false;
 
         try
         {        
@@ -71,18 +54,11 @@ public:
             
             wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
 
-            rt = new Rt(rtConfig);
-            if(!rt->isValid())
-            {
-                std::cerr << "Error initializing RayTracer" << std::endl;            
-                return false;
-            }
-
             long style = wxDEFAULT_FRAME_STYLE; // ^ wxRESIZE_BORDER;
             frame = new wxFrame(NULL, wxID_ANY, wxT("RayTracer: " + config_filename), wxPoint(50,50), wxSize(Nx,Ny),style);
 
             drawPane = new Display( frame, Nx, Ny);
-            //drawPane->Bind(wxEVT_LEFT_DOWN, &RtApp::OnClick, this);
+            drawPane->Bind(wxEVT_LEFT_DOWN, &RtApp::OnClick, this);
 
             sizer->Add(drawPane, 1, wxEXPAND);
             frame->SetSizer(sizer);
@@ -106,15 +82,56 @@ public:
         return 0;
     }
 
+    bool configImage()
+    {
+        Json::Value rtConfig;
+        try
+        {
+            // read config file into json object
+            std::ifstream configFile(config_filename);
+            if(!configFile.is_open())
+                throw std::runtime_error("Error opening config file " + config_filename);
+
+            configFile >> rtConfig;
+            configFile.close();
+
+            //parse config to get inmage size
+            Nx = rtConfig["image"]["width"].asUInt();
+            Ny = rtConfig["image"]["height"].asUInt();
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << "Error Parsing " << config_filename << std::endl;            
+            std::cerr << e.what() << '\n';
+            return false;
+        }
+
+        if(rt) delete rt;
+        rt = new Rt(rtConfig);
+        if(!rt->isValid())
+        {
+            std::cerr << "Error initializing RayTracer" << std::endl;            
+            return false;
+        }
+        return true;
+    }
+
+
     void updateImage()
     {
+
+        std::cout << "Rendering image...";
+        fflush(stdout);
         rt->render();
         drawPane->updateImage( rt->getImage());        
+        std::cout << " Complete" << std::endl;            
+
     }
 
 
     void OnClick(wxMouseEvent& /*event*/)
     {
+        configImage();
         updateImage();
     }
 
