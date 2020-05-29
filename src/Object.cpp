@@ -22,7 +22,8 @@ Object::Object(const Json::Value& config_object)
         }
         else if(material_type.compare("reflective")==0)
         {   
-            material = new Reflective(col);
+            float fuzz = config_object.get("fuzz",0).asFloat();
+            material = new Reflective(col,fuzz);
         }
         else if(material_type.compare("colorize_normal")==0)
         {   

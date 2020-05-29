@@ -39,9 +39,10 @@ class Diffuse : public Material
 class Reflective : public Material
 {
     mutable Rand rnd;
+    float fuzz;
 
     public:
-    Reflective(Color albedo): Material(albedo) {}
+    Reflective(Color albedo, float fuzz=0): Material(albedo), fuzz(fuzz) {}
 
     virtual bool scatter( const Hit& hit, Ray& scat, Color& albedo ) const;
 };

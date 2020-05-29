@@ -4,7 +4,7 @@
 
 Image::Image(const Json::Value& config)
 : valid(false), data(NULL)
-{   
+{
     //parse config
     try
     {   
@@ -25,4 +25,14 @@ Image::~Image()
 {   
     if(data)
         delete[] data;
+}
+
+void Image::copyFromColorArray(Color* col)
+{
+    for(unsigned int nn=0; nn<w*h; nn++)
+    {
+        data[nn*3] = col[nn].r_char();
+        data[nn*3+1] = col[nn].g_char();
+        data[nn*3+2] = col[nn].b_char();
+    }
 }

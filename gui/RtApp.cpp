@@ -32,11 +32,12 @@ class RtApp: public wxApp
 
     unsigned int Nx;
     unsigned int Ny;
-
+    bool closing;
 
 public:
     bool OnInit()
     {
+        closing=false;
         rt = NULL;
 
         // get config file from cmd line
@@ -56,6 +57,7 @@ public:
 
             long style = wxDEFAULT_FRAME_STYLE; // ^ wxRESIZE_BORDER;
             frame = new wxFrame(NULL, wxID_ANY, wxT("RayTracer: " + config_filename), wxPoint(50,50), wxSize(Nx,Ny),style);
+            frame->Bind(wxEVT_CLOSE_WINDOW, &RtApp::OnClose, this);
 
             drawPane = new Display( frame, Nx, Ny);
             drawPane->Bind(wxEVT_LEFT_DOWN, &RtApp::OnClick, this);
@@ -63,10 +65,11 @@ public:
             sizer->Add(drawPane, 1, wxEXPAND);
             frame->SetSizer(sizer);
 
+            frame->Show();
+
             updateImage();
 
-            frame->Show();
-            return true;
+            return !closing;
         }
         catch(const std::exception& e)
         {
@@ -75,6 +78,12 @@ public:
             return false;
         }
     } 
+
+    void OnClose(wxCloseEvent& event)
+    {
+        closing=true;
+        frame->Destroy();
+    }
 
     int OnExit()
     {
@@ -113,21 +122,34 @@ public:
             std::cerr << "Error initializing RayTracer" << std::endl;            
             return false;
         }
+
+        //set callback for redrawing image
+        rt->updateImageCallback = std::bind(&RtApp::redrawImage, this);
         return true;
     }
 
 
     void updateImage()
     {
-
         std::cout << "Rendering image...";
         fflush(stdout);
         rt->render();
-        drawPane->updateImage( rt->getImage());        
+        if(closing){
+            std::cout << "Closed during render" << std::endl;
+             return;        
+        }
+        drawPane->updateImage( rt->getImage());        //draws from callback
         std::cout << " Complete" << std::endl;            
 
     }
 
+    bool redrawImage()
+    {
+        drawPane->updateImage( rt->getImage());
+        frame->Update();
+        wxYield(); //let the application do other things...
+        return !closing; //let the renderer know if we are aborting
+    }
 
     void OnClick(wxMouseEvent& /*event*/)
     {
@@ -135,6 +157,14 @@ public:
         updateImage();
     }
 
+
+    // wxDECLARE_EVENT_TABLE();
 };
+
+// BEGIN_EVENT_TABLE(RtApp, wxApp)
+// EVT_END_SESSION(RtApp::OnClose)
+// EVT_SIZE(RtApp::OnSize)
+// END_EVENT_TABLE()
+
 
 IMPLEMENT_APP(RtApp)

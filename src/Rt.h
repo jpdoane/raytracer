@@ -8,6 +8,7 @@
 #include "Image.h"
 
 #include <jsoncpp/json/json.h>
+#include <functional>
 
 class Rt
 {
@@ -27,6 +28,8 @@ class Rt
     ~Rt();
 
     void render();
+    std::function<bool(void)> updateImageCallback;
+
     Color getColor(const Ray& r, const ObjectList& world, unsigned int depth = 0);
 
     unsigned char* getImage();

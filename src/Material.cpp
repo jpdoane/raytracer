@@ -8,7 +8,8 @@ bool Flat::scatter( const Hit& /*hit*/, Ray& /*scat*/, Color& albedo ) const
 
 bool Diffuse::scatter( const Hit& hit, Ray& scat, Color& albedo ) const 
 {
-    scat = Ray(hit.point, hit.point + hit.normal + rnd.rand_in_sphere());
+    scat = Ray(hit.point, hit.point + hit.normal + rnd.randn3());
+    // scat = Ray(hit.point, hit.point + hit.normal + rnd.rand_in_sphere());
     albedo=alb;
     return true;
 }
@@ -16,9 +17,22 @@ bool Diffuse::scatter( const Hit& hit, Ray& scat, Color& albedo ) const
 bool Reflective::scatter( const Hit& hit, Ray& scat, Color& albedo ) const 
 {
     scat.origin = hit.point;
-    scat.direction = hit.ray.direction - 2*dot(hit.normal,hit.ray.direction)*hit.normal;
     albedo=alb;
-    return true;
+
+    if(fuzz==0)
+    {
+        scat.direction = hit.ray.direction - 2*dot(hit.normal,hit.ray.direction)*hit.normal;
+        return true;
+    }
+    else
+    {
+        do
+        {
+            scat.direction = hit.ray.direction - 2*dot(hit.normal,hit.ray.direction)*hit.normal + rnd.randn3(fuzz);
+        } while (dot(scat.direction,hit.normal)<0); //make sure scattered ray doesn't go inside ball
+        return true;
+    }
+        
 }
 
 

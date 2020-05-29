@@ -64,10 +64,11 @@ bool ObjectList::hit(const Ray& ray, Hit& hit) const
     {
         if((*obj)->hit(ray, test_hit))
         {
-            if(nearest<0 || test_hit.t < nearest)
+            if(test_hit.distance < MINIMUM_HIT_DISTANCE || test_hit.distance > MAXIMUM_HIT_DISTANCE)
+            if(nearest<0 || test_hit.distance < nearest)
             {
                 hit = test_hit;
-                nearest = test_hit.t;                    
+                nearest = test_hit.distance;                    
             }
         }
     }
