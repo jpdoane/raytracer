@@ -10,14 +10,16 @@
 #include <string.h>
 
 Rt::Rt(const Json::Value& config)
-:valid(false), image(NULL), cam(NULL), world(NULL)
+:valid(false), renderActive(false), cancelRenderRequest(false), image(NULL), cam(NULL), world(NULL)
 {
+    pthread_mutex_init(&lock,NULL);
+
     //parse config
     try
     {   
         Json::Value render = config["render"];
 
-        aa = render.get("raysperpixel",100).asUInt();
+        rays_per_pixel = render.get("raysperpixel",100).asUInt();
         depthLimit = render.get("max_depth",25).asUInt();
     }
     catch(const std::exception& e)
@@ -55,13 +57,19 @@ unsigned char* Rt::getImage()
 
 void Rt::render()
 {    
+    pthread_mutex_lock(&lock);
+    cancelRenderRequest = false;
+    renderActive = true;    
     unsigned int w = image->get_width();
     unsigned int h = image->get_height();
+    pthread_mutex_unlock(&lock);
+
     Color* temp_image = new Color[w*h];
     memset(temp_image,0,w*h*sizeof(Color));
     unsigned int naa;
     float scale_data,scale_update;
-    for(naa = 0; naa<aa; naa++)
+    bool exitloop = false;
+    for(naa = 0; naa<rays_per_pixel; naa++)
     {
         scale_data = (float) naa/(naa+1);
         scale_update = 1.0f/(naa+1);
@@ -86,26 +94,40 @@ void Rt::render()
                 temp_image[px + py*w] = temp_image[px + py*w]*scale_data + getColor(r, *world)*scale_update;
             }
         }
-        //update image with partial aa result
-        if(updateImageCallback != nullptr && naa % 20 == 0)
+
+        //every RENDER_UPDATE_INTERVAL loops, update image with partial aa result
+        if( (naa+1) % RENDER_UPDATE_INTERVAL == 0 )
         {
+            pthread_mutex_lock(&lock);
             image->copyFromColorArray(temp_image);
-            if(!updateImageCallback())
-            {
-                std::cout << "Aborting Render" << std::endl;
-                delete[] temp_image;
-                return; //returns false if program is aborting
-            }
+            pthread_mutex_unlock(&lock);
+            if(imageUpdate) imageUpdate(naa+1, rays_per_pixel); //notify of new image
         }
+
+        //check to see if render has been cancelled
+        pthread_mutex_lock(&lock);
+        exitloop = cancelRenderRequest;
+        pthread_mutex_unlock(&lock);
+        if(exitloop) break; 
     }
-    if(updateImageCallback != nullptr && naa % 20 != 0)
+
+    if(!exitloop)
     {
+        pthread_mutex_lock(&lock);
         image->copyFromColorArray(temp_image);
-        updateImageCallback();
+        pthread_mutex_unlock(&lock);
+        if(imageUpdate) imageUpdate(rays_per_pixel, rays_per_pixel);
     }
+
     delete[] temp_image;
+
+    pthread_mutex_lock(&lock);
+    cancelRenderRequest = false;
+    renderActive = false;
+    pthread_mutex_unlock(&lock);    
 }
 
+//recursive function to get color "seen" by ray
 Color Rt::getColor(const Ray& r, const ObjectList& world, unsigned int depth)
 {
     Hit hit;

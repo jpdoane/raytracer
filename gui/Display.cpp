@@ -2,7 +2,7 @@
 
 Display::Display(wxFrame* parent, int width, int height)
 : wxPanel(parent), image_w(width), image_h(height),
-display_w(width), display_h(height)
+display_w(width), display_h(height),manual_resize(false)
 {    
     image.Create( image_w, image_h, true);
     bmp = wxBitmap( image );
@@ -10,25 +10,29 @@ display_w(width), display_h(height)
 }
 
 Display::Display(wxFrame* parent, unsigned char* data, int width, int height)
-: wxPanel(parent), image_w(width), image_h(height),
-display_w(width), display_h(height)
+: wxPanel(parent), display_w(width), display_h(height)
 {
-    updateImage(data);
+    updateImage(data,width,height);
 }
 
-void Display::updateImage(unsigned char* data)
+void Display::updateImage(unsigned char* data, int w, int h)
 {
+    image_w = w;
+    image_h = h;
     image.Create( image_w, image_h, data, true);
     bmp = wxBitmap( image.Scale( display_w, display_h /*, wxIMAGE_QUALITY_HIGH*/ ) );
     Refresh();
 }
 
+void Display::updateImageSize(int w, int h)
+{
+    image_w = w;
+    image_h = h;
+    image.Create( image_w, image_h, true);
+    bmp = wxBitmap( image );
+    Refresh();
+}
 
-/*
- * Called by the system of by wxWidgets when the panel needs
- * to be redrawn. You can also trigger this call by
- * calling Refresh()/Update().
- */
 
 void Display::paintEvent(wxPaintEvent& /*evt*/)
 {
@@ -37,15 +41,6 @@ void Display::paintEvent(wxPaintEvent& /*evt*/)
     render(dc);
 }
 
-
-/*
- * Alternatively, you can use a clientDC to paint on the panel
- * at any time. Using this generally does not free you from
- * catching paint events, since it is possible that e.g. the window
- * manager throws away your drawing when the window comes to the
- * background, and expects you will redraw it when the window comes
- * back (by sending a paint event).
- */
 void Display::paintNow()
 {
     // depending on your system you may need to look at double-buffered dcs
@@ -53,11 +48,6 @@ void Display::paintNow()
     render(dc);
 }
 
-/*
- * Here we do the actual rendering. I put it in a separate
- * method so that it can work no matter what type of DC
- * (e.g. wxPaintDC or wxClientDC) is used.
- */
 void Display::render(wxDC&  dc)
 {
     int neww, newh;
@@ -73,12 +63,9 @@ void Display::render(wxDC&  dc)
     dc.DrawBitmap( bmp, 0, 0, false );
 }
 
-/*
- * Here we call refresh to tell the panel to draw itself again.
- * So when the user resizes the image panel the image should be resized too.
- */
 void Display::OnSize(wxSizeEvent& event)
 {
+    manual_resize = true;
     Refresh();
     //skip the event.
     event.Skip();

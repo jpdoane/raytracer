@@ -1,6 +1,6 @@
 {
     "render": {
-        "raysperpixel": 500,
+        "raysperpixel": 200,
         "max_depth": 10
     },
     "image": {

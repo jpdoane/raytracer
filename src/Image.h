@@ -1,5 +1,6 @@
 #include <jsoncpp/json/json.h>
 #include "Color.h"
+#include <string.h>
 
 class Image
 {
@@ -13,6 +14,7 @@ class Image
     ~Image();
 
     inline unsigned char* get_data() { return data; }
+    inline void copy_data(unsigned char* dest) { memcpy(dest,data,w*h*3); }
 
     void copyFromColorArray(Color* col);
 
