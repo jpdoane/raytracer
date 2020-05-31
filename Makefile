@@ -35,7 +35,7 @@ LD := ld
 # C++ flags
 CXXFLAGS := #-std=c++11
 # C/C++ flags
-OPTFLAGS :=  -O1
+OPTFLAGS :=  -O3
 CPPFLAGS := -g $(OPTFLAGS) -Wall -Wextra `wx-config --cxxflags` -I$(SRCDIR_RT) #-pedantic 
 # linker flags
 #LDFLAGS := -L/usr/lib/x86_64-linux-gnu -lpthread -lwx_gtk2u_xrc-3.0 -lwx_gtk2u_html-3.0 -lwx_gtk2u_qa-3.0 -lwx_gtk2u_adv-3.0 -lwx_gtk2u_core-3.0 -lwx_baseu_xml-3.0 -lwx_baseu_net-3.0 -lwx_baseu-3.0 -lc

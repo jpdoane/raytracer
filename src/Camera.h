@@ -5,14 +5,25 @@
 
 class Camera
 {
-bool valid;
-Vec3 camera_origin, viewport_origin;
-Vec3 viewU, viewV;
+    bool valid;
+    Vec3 lookAt, camera_up, camera_origin, viewport_origin;
+    float view_height,view_distance,view_width;
+    Vec3 viewU, viewV;
+
+    void updateGeometry();
 
 public:
 
     Camera(const Json::Value& config);
-    Ray makeRay(float u, float v);
+    //absolute camera movements
+    void locateCamera(const Vec3& position);
+    void locateLook(const Vec3& look);
 
+    //relative camera movements
+    void zoomCamera(float zoom);
+    void moveLook(float pan_right, float tilt_up);
+    void moveCamera(float right, float up, float in);
+
+    Ray makeRay(float u, float v);
     inline bool isValid() const {return valid;}
 };

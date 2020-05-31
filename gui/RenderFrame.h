@@ -24,6 +24,9 @@ class RenderFrame : public wxFrame, public wxThreadHelper
     unsigned int Nx;
     unsigned int Ny;
 
+    wxPoint mouse_last_pos;
+    wxClientDC* dc;
+
 public:
     RenderFrame(wxApp *handler, const std::string& config_filename);
     ~RenderFrame();
@@ -35,9 +38,10 @@ protected:
     void emitNewImage(int current_ray, int total_rays); //callback from render object to indicate new image is available
     //void updateImage(wxThreadEvent& event);
     void updateImage(wxCommandEvent& event);
-    void OnClick(wxMouseEvent& event);
+    void OnMouse(wxMouseEvent& event);
     void OnClose(wxCloseEvent& event);
 
+    bool configRender();
     bool startRender();
     void stopRender();
 

@@ -7,20 +7,24 @@ handler(handler)
 {    
     try
     {
-        CreateStatusBar(); 	
+        CreateStatusBar(2); 	
         wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
 
-        drawPane = new Display( this, 10,10);
+
+        drawPane = new Display( this, 100,100);
         sizer->Add(drawPane, 1, wxEXPAND);
         SetSizer(sizer);
 
         //bind events
+        drawPane->Bind(wxEVT_LEFT_DOWN, &RenderFrame::OnMouse, this);
+        drawPane->Bind(wxEVT_RIGHT_DOWN, &RenderFrame::OnMouse, this);
+        drawPane->Bind(wxEVT_MOTION, &RenderFrame::OnMouse, this);
+        drawPane->Bind(wxEVT_MOUSEWHEEL, &RenderFrame::OnMouse, this);
 
-        //mouse click
-        drawPane->Bind(wxEVT_LEFT_DOWN, &RenderFrame::OnClick, this);
+        dc = new wxClientDC(drawPane);
 
+        configRender();
         if(!startRender()) return;
-        //Nx, Ny set from config
 
     }
     catch(const std::exception& e)
@@ -35,10 +39,10 @@ RenderFrame::~RenderFrame()
 {
 }
 
-bool RenderFrame::startRender()
+bool RenderFrame::configRender()
 {
     //stop any current rendering process
-    stopRender();
+    //stopRender();
 
     //delete previous rt object
     if(rt) delete rt;
@@ -84,7 +88,28 @@ bool RenderFrame::startRender()
 
     //set callback for redrawing image
     rt->imageUpdate = std::bind(&RenderFrame::emitNewImage, this, std::placeholders::_1, std::placeholders::_2);
+    return true;
+}
 
+bool RenderFrame::startRender()
+{
+    // see whether there is an existing thread already
+    wxThread* thr = GetThread();
+    if(thr && GetThread()->IsAlive())
+    {
+        if(rt->rendering())
+        {
+            //if currently rendering, just restart
+            rt->restartRender();
+            return true;
+        }
+        else
+        {
+            //make sure any previous thread has fully completed...
+            GetThread()->Wait();
+        }
+    }
+    
     if (CreateThread(wxTHREAD_JOINABLE) != wxTHREAD_NO_ERROR)
     {
         std::cerr << "Error starting worker thread" << std::endl;            
@@ -129,9 +154,39 @@ void RenderFrame::stopRender()
     GetThread()->Wait();
 }
 
-void RenderFrame::OnClick(wxMouseEvent& /*event*/)
+void RenderFrame::OnMouse(wxMouseEvent& event)
 {
-    startRender();
+    if(event.ButtonDown())
+    {
+        mouse_last_pos = event.GetLogicalPosition(*dc);
+    }
+    else if(event.Dragging())
+    {
+        wxPoint mouse_pos = event.GetLogicalPosition(*dc);
+        wxPoint d_mouse = mouse_pos-mouse_last_pos;
+        mouse_last_pos = mouse_pos;
+
+        if(event.RightIsDown())
+        {
+            //move camera based on mouse motion
+            rt->moveCamera(-d_mouse.x/5.0f,0,-d_mouse.y/5.0f);
+        }
+        else
+        {
+            //move look location based on mouse motion
+            rt->moveLook(-d_mouse.x/5.0f,d_mouse.y/5.0f);
+        }
+
+        SetStatusText(std::to_string(d_mouse.x) + ", " + std::to_string(d_mouse.y),1);
+
+        startRender();
+    }
+   else if(event.GetWheelRotation())
+   {
+        rt->zoomCamera(event.GetWheelRotation()/120.0f);
+        startRender();
+   }
+     
 }
 
 void RenderFrame::OnClose(wxCloseEvent& /*event*/)
@@ -147,9 +202,6 @@ void RenderFrame::OnClose(wxCloseEvent& /*event*/)
 wxDEFINE_EVENT(myEVT_NEW_IMAGE_AVAILABLE, wxCommandEvent);
 
 wxBEGIN_EVENT_TABLE(RenderFrame, wxFrame)
-//    EVT_THREAD(wxID_ANY, myEVT_NEW_IMAGE_AVAILABLE, RenderFrame::updateImage)
-
     EVT_COMMAND(wxID_ANY, myEVT_NEW_IMAGE_AVAILABLE, RenderFrame::updateImage)
-//    EVT_THREAD(myEVT_NEW_IMAGE_AVAILABLE, RenderFrame::updateImage)
     EVT_CLOSE(RenderFrame::OnClose)
 wxEND_EVENT_TABLE()

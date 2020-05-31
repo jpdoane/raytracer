@@ -10,7 +10,8 @@
 #include <string.h>
 
 Rt::Rt(const Json::Value& config)
-:valid(false), renderActive(false), cancelRenderRequest(false), image(NULL), cam(NULL), world(NULL)
+:valid(false), renderActive(false), cancelRenderRequest(false), renderRestart(false),
+image(NULL), cam(NULL), world(NULL)
 {
     pthread_mutex_init(&lock,NULL);
 
@@ -59,7 +60,8 @@ void Rt::render()
 {    
     pthread_mutex_lock(&lock);
     cancelRenderRequest = false;
-    renderActive = true;    
+    renderRestart = false;
+    renderActive = true;
     unsigned int w = image->get_width();
     unsigned int h = image->get_height();
     pthread_mutex_unlock(&lock);
@@ -96,7 +98,7 @@ void Rt::render()
         }
 
         //every RENDER_UPDATE_INTERVAL loops, update image with partial aa result
-        if( (naa+1) % RENDER_UPDATE_INTERVAL == 0 )
+        if( naa % RENDER_UPDATE_INTERVAL == 0 )
         {
             pthread_mutex_lock(&lock);
             image->copyFromColorArray(temp_image);
@@ -104,8 +106,13 @@ void Rt::render()
             if(imageUpdate) imageUpdate(naa+1, rays_per_pixel); //notify of new image
         }
 
-        //check to see if render has been cancelled
+        //check to see if render has been restarted or cancelled
         pthread_mutex_lock(&lock);
+        if(renderRestart)
+        {
+            naa = 0;
+            renderRestart = false;
+        }
         exitloop = cancelRenderRequest;
         pthread_mutex_unlock(&lock);
         if(exitloop) break; 
