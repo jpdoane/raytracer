@@ -3,6 +3,8 @@ Simple ray tracer based on Peter Shirley's really execllent [Ray Tracing in a We
 
 Currently it is only capable of drawing spheres. Scene definition is contained in a json file passed as a parameter.
 
+Progressively renders scene with increasing rays/pixel to reduce noise. Rudimentary camera motion via mouse (left drag points camera, right drag moves camera, scroll wheel zooms). "Real-time" rendering at low quality renders.
+
 ### Build and run:
 ```
 $ make
